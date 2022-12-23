@@ -5,6 +5,7 @@ import neat, random
 pygame.init()
 
 SCREEN = pygame.display.set_mode(SCREEN_SIZE)
+pygame.display.set_caption('Pong')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
 
 def remove(index):
@@ -46,7 +47,7 @@ def eval_genomes(genomes,config):
         points+=1
         if points % 100 ==0:
             game_speed+=1
-        text = FONT.render(f'Points:  {str(points%10)}', True, (0, 0, 0))
+        text = FONT.render(f'Points:  {str(game_speed)}', True, (0, 0, 0))
         SCREEN.blit(text, (5, HEIGHT-40))
 
 
@@ -87,7 +88,8 @@ def eval_genomes(genomes,config):
         for i, pong in enumerate(pongs):
             output = nets[i].activate((
                                     ball.pos.midbottom[1],
-                                    pong.pos.midtop[0] - ball.pos.midbottom[0]
+                                    pong.pos.midtop[0] - ball.pos.midbottom[0],
+                                    ball.angle
                                 ))
             if output[0] > 0.5:
                 pong.move_right = True
@@ -100,7 +102,6 @@ def eval_genomes(genomes,config):
         for i,pong in enumerate(pongs):
             if ball.pos.left >= pong.pos.left and ball.pos.right <= pong.pos.right and ball.pos.bottom >= pong.pos.top:
                 ball.vel_y*=-1
-                points+=1
                 ge[i].fitness += 1
                 pong.hits+=1
 
@@ -109,19 +110,19 @@ def eval_genomes(genomes,config):
                 remove(i)
 
             
-            if ball.pos.bottom > HEIGHT+10:
-                RUN=False
+            if ball.pos.y > HEIGHT:
+                break
             
             # Remove pongs which have not scored any poitns
             if game_speed > 10 and pong.hits == 0:
                 ge[i].fitness -= 1
                 remove(i)
 
+
         if len(pongs) == 0: RUN=False; points=1
 
         ball.draw(SCREEN)
 
-        ball.velocity = random_velocity_change(ball.velocity)
         score()
         statistics()
 
@@ -144,7 +145,7 @@ def run(config_path):
         pop = neat.Checkpointer.restore_checkpoint(get_max_checkpoint())
         print('Checkout point found, resuming')
     else:
-        print('No checkout, Creating new population')
+        print('No checkpoint found, Creating new population')
         pop = neat.Population(config)
     
 
@@ -152,7 +153,7 @@ def run(config_path):
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
-    pop.add_reporter(neat.Checkpointer(5))
+    pop.add_reporter(neat.Checkpointer(20))
 
     pop.run(eval_genomes,200)
 

@@ -18,7 +18,6 @@ class Pong:
         self.hits =0
 
 
-
     def draw(self, SCREEN):
         SCREEN.blit(self.image,(self.pos.x,self.pos.y))
         pygame.draw.rect(SCREEN, self.color, (self.pos.x,self.pos.y,self.image.get_width(),self.image.get_height()),1)
@@ -33,6 +32,7 @@ class Pong:
             self.move_left = not self.move_left
     
     def move(self,DIRECTION):
+        
         increment_x = 10
         if DIRECTION=='RIGHT':
             if self.pos.right+increment_x <= WIDTH:
@@ -40,7 +40,7 @@ class Pong:
         if DIRECTION=='LEFT':
             if self.pos.left-increment_x >= 0:
                 self.pos.x = self.pos.x-increment_x
-
+        
 
 class Ball:
 
@@ -52,25 +52,29 @@ class Ball:
         r.remove(0)
         self.vel_x = random.choice(r)
         self.vel_y = random.choice(r)
-        self.vel_muliplier = 3
+        self.vel_muliplier_x = 3
+        self.vel_muliplier_y = 3
         self.pos = pygame.Rect(self.pos_x,self.pos_y,img.get_width(),img.get_height())
         self.foul = False
+        self.angle = 0
+        self.old_pos = self.pos
 
     def draw(self, SCREEN):
         SCREEN.blit(self.image,(self.pos.x,self.pos.y))
         
-    @property
-    def velocity(self):
-        return self.vel_muliplier
-    
-    @velocity.setter
-    def velocity(self,value):
-        self.vel_muliplier = value
+    def get_slope(self,old,new):
+
+        try:
+
+            return (new[1]-old[1])/(new[0]-old[0])
+        except ZeroDivisionError:
+            return 0
 
     def update(self):
         self.move()
     
     def move(self):
+        
         if self.pos.left <= 0:
             self.vel_x*=-1
         if self.pos.bottom >= HEIGHT:
@@ -80,7 +84,9 @@ class Ball:
         if self.pos.top <=0:
             self.vel_y*=-1
 
-        self.pos.y -= self.vel_y * self.vel_muliplier
-        self.pos.x -= self.vel_x * self.vel_muliplier
+        self.old_pos = self.pos.copy()
 
+        self.pos.y += self.vel_y * self.vel_muliplier_y
+        self.pos.x += self.vel_x * self.vel_muliplier_x
         
+        self.angle = self.get_slope(self.old_pos.center,self.pos.center)
