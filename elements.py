@@ -1,6 +1,6 @@
 import pygame, os, random
 
-SCREEN_SIZE = WIDTH, HEIGHT = 400, 600
+SCREEN_SIZE = WIDTH, HEIGHT = 500, 400
 
 PongIMG = pygame.image.load(os.path.join('assets','Pong.png'))
 BallIMG = pygame.image.load(os.path.join('assets','Ball.png'))
@@ -15,6 +15,7 @@ class Pong:
         self.move_left = False
         self.pos = pygame.Rect(self.pos_x,self.pos_y,img.get_width(),img.get_height())
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.hits =0
 
 
 
@@ -25,11 +26,14 @@ class Pong:
     def update(self):
         if self.move_right:
             self.move(DIRECTION='RIGHT')
+            #reset
+            self.move_right = not self.move_right
         if self.move_left:
             self.move(DIRECTION='LEFT')
+            self.move_left = not self.move_left
     
     def move(self,DIRECTION):
-        increment_x = 8
+        increment_x = 10
         if DIRECTION=='RIGHT':
             if self.pos.right+increment_x <= WIDTH:
                 self.pos.x = self.pos.x+increment_x
@@ -44,7 +48,11 @@ class Ball:
         self.image = img
         self.pos_x = WIDTH/4
         self.pos_y = HEIGHT/3
-        self.vel_x = self.vel_y = -2
+        r = [s for s in range(-3,3)]
+        r.remove(0)
+        self.vel_x = random.choice(r)
+        self.vel_y = random.choice(r)
+        self.vel_muliplier = 3
         self.pos = pygame.Rect(self.pos_x,self.pos_y,img.get_width(),img.get_height())
         self.foul = False
 
@@ -53,12 +61,11 @@ class Ball:
         
     @property
     def velocity(self):
-        return (self.vel_x, self.vel_y)
+        return self.vel_muliplier
     
     @velocity.setter
     def velocity(self,value):
-        self.vel_x = value[0]
-        self.vel_y = value[1]
+        self.vel_muliplier = value
 
     def update(self):
         self.move()
@@ -73,7 +80,7 @@ class Ball:
         if self.pos.top <=0:
             self.vel_y*=-1
 
-        self.pos.y -= self.vel_y * 3
-        self.pos.x -= self.vel_x * 3
+        self.pos.y -= self.vel_y * self.vel_muliplier
+        self.pos.x -= self.vel_x * self.vel_muliplier
 
         
